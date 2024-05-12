@@ -1,26 +1,38 @@
 import React, { useEffect } from 'react';
 
-function DesktopNotification() {
+const DesktopNotification = () => {
   useEffect(() => {
+    // Function to show notification
     const showNotification = () => {
-      if ('Notification' in window) {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            new Notification('Hello, World please check ');
+      // Check if the browser supports notifications
+      if (!("Notification" in window)) {
+        console.error("This browser does not support desktop notification");
+        return;
+      }
+
+      // Check if permission is granted
+      if (Notification.permission === "granted") {
+        // Show notification
+        new Notification("Hi!");
+      } else if (Notification.permission !== "denied") {
+        // Request permission
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            // Show notification
+            new Notification("Hi!");
           }
         });
-      } else {
-        console.log('Notifications not supported');
       }
     };
 
-    
-    const timer = setTimeout(showNotification, 1 * 6 * 1000); // 10 minutes in milliseconds
+    // Schedule notifications every 15 minutes
+    const intervalId = setInterval(showNotification, 2 * 60 * 1000);
 
-    return () => clearTimeout(timer);
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
-  return <h2>Desktop Notification</h2>;
-}
+  return null; // This component doesn't render anything
+};
 
 export default DesktopNotification;

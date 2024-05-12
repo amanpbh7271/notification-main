@@ -1,76 +1,66 @@
-// Header.jsx
-import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, IconButton, InputBase, alpha } from '@mui/material';
-import { Search as SearchIcon, ExitToApp as ExitToAppIcon } from '@mui/icons-material'; 
+import React from 'react';
+import { AppBar, Toolbar, Typography, IconButton, InputBase, Box } from '@mui/material';
+import { Search as SearchIcon, AddCircleOutline as AddCircleOutlineIcon, ExitToApp as ExitToAppIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import IncidentContainer from './IncidentContainer';
 
 const Header = () => {
-  const [searchText, setSearchText] = useState('');
+    const navigate = useNavigate();
+    const handleSearch = () => {
+    // Implement search functionality
+    console.log('Search clicked');
+  };
 
-  const handleSearchChange = (event) => {
-    setSearchText(event.target.value);
+  const handleCreate = () => {
+    // Implement create functionality
+   // e.preventDefault();
+    navigate("/IncidentContainer");
+    console.log('Create clicked');
   };
 
   const handleLogout = () => {
-    // Implement logout logic here
-  };
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    // Implement search logic here using searchText
-    console.log("Searching for:", searchText);
-    // Redirect to Incidents page with search query
-    window.location.href = `/IncidentsList?search=${searchText}`;
+    // Implement logout functionality
+    console.log('Logout clicked');
   };
 
   return (
-    <AppBar position="static"  sx={{ backgroundColor: '#607d8b' }}>
+    <AppBar position="static">
       <Toolbar>
         {/* Logo */}
-        <Typography variant="h6" component="div" style={{ flex: '0 0 25%', textAlign: 'left' }}>
-          Your Logo
-        </Typography>
+        <Box sx={{ flex: '15%' }}>
+          <Typography variant="h6" component="div">
+            <img src="/path/to/logo.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
+          </Typography>
+        </Box>
+        
+        {/* Incident Blast */}
+        <Box sx={{ flex: '15%' }}>
+          <Typography variant="h6">Incident Blast</Typography>
+        </Box>
 
-        {/* Title */}
-        <Typography variant="h6" component="div" style={{ flex: '0 0 25%', textAlign: 'center' }}>
-          Incident Blast
-        </Typography>
 
-        {/* Search Input */}
-        <form onSubmit={handleSearchSubmit} style={{ flex: '0 0 25%', display: 'flex', alignItems: 'center' }}>
-          <InputBase
-            placeholder="Search incidents..."
-            inputProps={{ 'aria-label': 'search' }}
-            value={searchText}
-            onChange={handleSearchChange}
-            sx={{
-              ml: 1,
-              width: '100%',
-              color: 'inherit',
-              '&::placeholder': {
-                color: 'inherit',
-              },
-              border: '1px solid',
-              borderColor: alpha('#000', 0.5),
-              borderRadius: 1,
-              px: 1.5,
-              py: 1,
-              '&:focus': {
-                outline: 'none',
-                borderColor: '#000',
-              },
-              // Add z-index to ensure text is visible
-              zIndex: 1,
-            }}
-          />
-          <IconButton type="submit" aria-label="search" sx={{ zIndex: 2 }}>
+
+       {/* Search Inc and icon */}
+       <Box sx={{ flex: '40%', display: 'flex', alignItems: 'center', position: 'relative', paddingRight: '40px' }}>
+          <InputBase placeholder="Enter Inc Number" style={{ color: 'inherit', width: '100%' }} />
+          <IconButton onClick={handleSearch} color="inherit" style={{ position: 'absolute', right: '0', top: '50%', transform: 'translateY(-50%)' }}>
             <SearchIcon />
           </IconButton>
-        </form>
+        </Box>
 
-        {/* Logout Button */}
-        <IconButton color="inherit" onClick={handleLogout} style={{ flex: '0 0 25%', textAlign: 'right' }}>
-          <ExitToAppIcon />
-        </IconButton>
+        {/* Create Inc */}
+        <Box sx={{ flex: '15%' }}>
+          <IconButton onClick={handleCreate} color="inherit">
+            <AddCircleOutlineIcon />
+          </IconButton>
+        </Box>
+
+        {/* Logout */}
+        <Box sx={{ flex: '15%' }}>
+          <IconButton onClick={handleLogout} color="inherit">
+            <ExitToAppIcon />
+          </IconButton>
+        </Box>
       </Toolbar>
     </AppBar>
   );

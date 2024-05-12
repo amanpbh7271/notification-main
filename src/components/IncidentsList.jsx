@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Table, TableContainer, TableHead, TableRow, TableCell, TableBody, Paper, Button, TextField } from '@mui/material';
+import { Container, Table, TableContainer, TableHead, TableRow, TableCell, TableBody, Paper, Button } from '@mui/material';
+import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import Header from './Header'; // Import the Header component
 
 const IncidentsList = () => {
@@ -14,7 +15,7 @@ const IncidentsList = () => {
         const unsrnameforAPI = 'Sachin'; // Provide your username here
         const response = await fetch(`http://localhost:8080/api/incDetailsForManager/${unsrnameforAPI}`);
         if (response.ok) {
-          const data = await response.json();
+          let data = await response.json();
           setIncidents(data);
         } else {
           console.error('Failed to fetch incident details:', response.statusText);
@@ -31,13 +32,8 @@ const IncidentsList = () => {
     setCurrentPage(pageNumber);
   };
 
-  // Go to a specific page
-  const goToPage = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
   // Determine total number of pages
-  const itemsPerPage = 10;
+  const itemsPerPage = 8;
   const totalPages = Math.ceil(incidents.length / itemsPerPage);
 
   // Get incidents for current page
@@ -49,7 +45,7 @@ const IncidentsList = () => {
     <div>
       <Header />
       <Container maxWidth="md" style={{ marginTop: '40px' }}>
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={3}>
           <Table>
             <TableHead style={{ backgroundColor: '#607d8b', color: '#fff' }}>
               <TableRow>
@@ -72,17 +68,13 @@ const IncidentsList = () => {
           </Table>
         </TableContainer>
         {/* Pagination */}
-        <div style={{ marginTop: '20px', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Button disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)}>Previous</Button>
-          <Button disabled={currentPage === totalPages} onClick={() => paginate(currentPage + 1)}>Next</Button>
-          <TextField
-            type="number"
-            value={currentPage} // Display current page number
-            onChange={(e) => goToPage(parseInt(e.target.value))}
-            inputProps={{ min: 1, max: totalPages }}
-            style={{ marginLeft: '10px', marginRight: '40px', width: '100px' }} // Increased width
-          />
-          <Button onClick={() => goToPage(parseInt(currentPage))}>Go</Button>
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Button variant="contained" color="primary" disabled={currentPage === 1} onClick={() => paginate(currentPage - 1)} startIcon={<KeyboardArrowLeft />}>Previous</Button>
+          </div>
+          <div>
+            <Button variant="contained" color="primary" disabled={currentPage === totalPages} onClick={() => paginate(currentPage + 1)} endIcon={<KeyboardArrowRight />}>Next</Button>
+          </div>
         </div>
       </Container>
     </div>

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Typography, Grid, TextField, Button,MenuItem } from '@mui/material';
+import { useParams,useNavigate } from 'react-router-dom';
+import { Container, Typography, Grid, TextField, Button, MenuItem, IconButton,Box } from '@mui/material';
 import axios from 'axios';
-
+import CloseIcon from '@mui/icons-material/Close';
+import Header from './Header';
+import CopyButton from "./CopyCode";
+import QRCode from "qrcode.react";
 const UpdateIncDetails = () => {
   const { id } = useParams(); // Get the incident ID from URL params
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
 
     manager: '',
@@ -21,7 +25,16 @@ const UpdateIncDetails = () => {
     date:'',
     time:''
   });
-
+  const [updateForm, SetUpdateForm] = useState(true);
+  const [whatsAppAndCopy, SetWhatsAppAndCopy] = useState(false);
+  const dataForWhatAppandCopy = ("*Below are Details for raised INC*" + "\n" + "*IncNumber*:- " + formData.incNumber +"\n*Account* :-"+formData.account +
+  "\n*Updated/next Status*:-\n" + formData.preUpdates.map(update => `${update.timestamp} -- ${update.message}`).join("\n") +
+  "\n*Status*:-" + formData.status +
+  "\n*Business impact*:-"+formData.businessImpact + "\n*Work Around*:-"+formData.workAround  +
+  "\n*Notification Manager*:-"+ formData.manager+"\n*Issue Owned By*:-"+formData.issueOwnedBy+
+  "\n"+"*bridgeDeatils*:-" + formData.bridgeDetails+"\n*Date*:-"+ formData.date+"\n*Time*:-"+ formData.time+
+  "\n*priority*:-"+formData.priority
+); 
   useEffect(() => {
     console.log('is from list',id);
     const fetchIncidentDetails = async () => {
@@ -64,6 +77,15 @@ const UpdateIncDetails = () => {
     });
   };
 
+   // Function to generate WhatsApp message link
+   const generateWhatsAppLink = () => {
+    // Construct your WhatsApp message link with the phone number and data
+     const phoneNumber=7772980155;
+    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(dataForWhatAppandCopy)}`;
+  };
+
+  const whatsappLink = generateWhatsAppLink();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -82,20 +104,37 @@ const UpdateIncDetails = () => {
       if (response.status === 200) {
         console.log('Incident details updated successfully');
         // Redirect or display a success message
+        SetUpdateForm(false);
+        SetWhatsAppAndCopy(true);
       } else {
         console.error('Failed to update incident details');
       }
     } catch (error) {
       console.error('Error occurred while updating incident details:', error);
     }
+
+  };
+
+  const handleClose = () => {
+    navigate("/IncidentsList");
+   
   };
 
   return (
-    <Container maxWidth="md" className="incident-container">
-    <Typography variant="h5" gutterBottom className="header">
-      Please Update Incident Details
-    </Typography>
-    <form onSubmit={handleSubmit}>
+    <div>
+            <Header />
+    <Container maxWidth="md" className="incident-container" style={{ marginTop: '40px' }}>
+    
+    {updateForm && (<div>
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+  <Typography variant="h5" gutterBottom style={{ width: '95%' }}>
+    Update Incident Details
+  </Typography>
+  <IconButton color="inherit" onClick={handleClose} style={{ width: '5%' }}>
+    <CloseIcon />
+  </IconButton>
+</Box>
+    <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField name="incNumber" label="Inc Number" value={formData.incNumber} onChange={handleChange} fullWidth disabled />
@@ -194,7 +233,25 @@ const UpdateIncDetails = () => {
         </Grid>
       </Grid>
     </form>
+    </div> )}
+    {whatsAppAndCopy && (
+        <div>
+<Box display="flex" alignItems="center" justifyContent="space-between">
+  <Typography variant="h5" gutterBottom style={{ width: '95%' }}>
+    Scan QR for sending details to WhatsApp
+  </Typography>
+  <IconButton color="inherit" onClick={handleClose} style={{ width: '5%' }}>
+    <CloseIcon />
+  </IconButton>
+</Box>
+          
+          {/* Call the WhatsAppQRCode component with the phoneNumber and data props */}
+          <QRCode value={whatsappLink} />
+          {/* <CopyButton code={data} />         */}
+        
+        </div> )}
   </Container>
+  </div>
   );
 };
 
