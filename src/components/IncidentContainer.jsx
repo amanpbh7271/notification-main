@@ -4,8 +4,21 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import QRCode from "qrcode.react";
+import FileCopyIcon from '@mui/icons-material/FileCopy'; // Importing copy icon
+import Paper from '@mui/material/Paper';
+import { makeStyles } from '@mui/styles';
+
+const useStyles = makeStyles(() => ({
+  paper: {
+    padding: '16px', // Adjust this value as needed
+    margin: 'auto',
+    marginTop: '32px', // Adjust this value as needed
+    maxWidth: 1000,
+  },
+}));
 
 const IncidentContainer = () => {
+  const classes = useStyles();
   const [formData, setFormData] = useState({
     incNumber: '',
     account: '',
@@ -19,11 +32,14 @@ const IncidentContainer = () => {
     priority: ''
   });
   const [incForm, setIncForm] = useState(true);
+  const [accountOptions, setAccountOptions] = useState([]);
   const [managersForAccount, setManagersForAccount] = useState([]);
+  
   const [whatsAppAndCopy, SetWhatsAppAndCopy] = useState(false);
   const [date, SetDate] = useState('');
   const [time, SetTime] = useState('');
   const [whatsappLink, setWhatsAppLink] = useState('');
+  const [submittedData, setSubmittedData] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (event) => {
@@ -70,6 +86,7 @@ const IncidentContainer = () => {
         // Reset form after successful submission if needed
         setIncForm(false);
         SetWhatsAppAndCopy(true);
+        setSubmittedData(formDataWithDateTimeAndPreUpdates); // Set submitted data
       } else {
         console.error('Failed to save incident data');
       }
@@ -98,6 +115,28 @@ const IncidentContainer = () => {
   }, [formData.account]);
 
   useEffect(() => {
+    // Fetch account options for the user "Amar"
+    const fetchAccountOptionsForUser = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/accountForUser/Amar');
+        if (response.ok) {
+          const accountData = await response.json();
+          // Extract account options from the response and update state
+
+          setAccountOptions(accountData?.[0]?.account);
+          console.log(accountData);
+        } else {
+          console.error('Failed to fetch account options:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error occurred while fetching account options:', error);
+      }
+    };
+
+    fetchAccountOptionsForUser();
+  }, []);
+
+  useEffect(() => {
     // Generate WhatsApp link
     const generateWhatsAppLink = () => {
       // Construct your WhatsApp message link with the phone number and data
@@ -120,10 +159,34 @@ const IncidentContainer = () => {
     navigate("/IncidentsList");
   };
 
+  const handleCopy = () => {
+    // Construct the text to copy
+    const detailsToCopy = `
+Incident Number: ${submittedData.incNumber}
+Account: ${submittedData.account}
+Status: ${submittedData.status}
+Status Update/Next Step: ${submittedData.addStatusUpdate}
+Business Impact: ${submittedData.businessImpact}
+Workaround: ${submittedData.workaround}
+Notification Manager: ${submittedData.manager}
+Issue Owned By: ${submittedData.issueOwnedBy}
+Bridge Details: ${submittedData.bridgeDetails}
+Date: ${submittedData.date}
+Time: ${submittedData.time}
+Priority: ${submittedData.priority}
+    `;
+
+    // Copy the text to clipboard
+    navigator.clipboard.writeText(detailsToCopy)
+      .then(() => console.log('Incident details copied to clipboard'))
+      .catch((error) => console.error('Error copying incident details to clipboard:', error));
+  };
+
   return (
     <div>
       <Header />
-      <Container maxWidth="md" className="incident-container" style={{ marginTop: '40px' }}>
+      <Paper elevation={3} className={classes.paper}>
+      <Container maxWidth="md" className="incident-container" >
         {incForm && (
           <div>
             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
@@ -149,12 +212,16 @@ const IncidentContainer = () => {
                     fullWidth
                     required
                   >
-                    <MenuItem value="Three Ireland">Three Ireland</MenuItem>
-                    <MenuItem value="UK">UK</MenuItem>
+                    {accountOptions.map((option) => (
+                      <MenuItem key={option?.name} value={option?.name}>
+                        {option?.name}
+                      </MenuItem>
+                    ))}
+                
                   </TextField>
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField name="addStatusUpdate" label="Status Update/Next Step" value={formData.addStatusUpdate} onChange={handleChange} fullWidth multiline rows={3} />
+                  <TextField name="addStatusUpdate" label="Status Update/Next Step" value={formData.addStatusUpdate} onChange={handleChange} fullWidth multiline rows={1} />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -215,15 +282,15 @@ const IncidentContainer = () => {
                   </TextField>
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField name="businessImpact" label="Business Impact" value={formData.businessImpact} onChange={handleChange} fullWidth multiline rows={3} />
+                  <TextField name="businessImpact" label="Business Impact" value={formData.businessImpact} onChange={handleChange} fullWidth multiline rows={2} />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField name="workaround" label="Workaround" value={formData.workaround} onChange={handleChange} fullWidth multiline rows={3} />
+                  <TextField name="workaround" label="Workaround" value={formData.workaround} onChange={handleChange} fullWidth multiline rows={2} />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField name="bridgeDetails" label="Bridge Details" value={formData.bridgeDetails} onChange={handleChange} fullWidth multiline rows={3} />
+                  <TextField name="bridgeDetails" label="Bridge Details" value={formData.bridgeDetails} onChange={handleChange} fullWidth multiline rows={2} />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={3}>
                   <Button variant="contained" color="primary" type="submit">
                     Submit
                   </Button>
@@ -246,7 +313,84 @@ const IncidentContainer = () => {
             <QRCode value={whatsappLink} />
           </div>
         )}
+
+{submittedData && (
+  <div>
+    <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+      <Typography variant="h5" gutterBottom style={{ width: '95%' }}>
+        Submitted Incident Details
+      </Typography>
+      <Button variant="outlined" color="inherit" onClick={handleCopy} style={{ width: '5%' }}>
+                <FileCopyIcon />
+              </Button>
+    </Box>
+    <Grid container spacing={2}>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Incident Number: {submittedData.incNumber}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Account: {submittedData.account}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Status: {submittedData.status}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Status Update/Next Step: {submittedData.addStatusUpdate}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Business Impact: {submittedData.businessImpact}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Workaround: {submittedData.workaround}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Notification Manager: {submittedData.manager}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Issue Owned By: {submittedData.issueOwnedBy}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Bridge Details: {submittedData.bridgeDetails}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Date: {submittedData.date}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Time: {submittedData.time}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="body1">
+          Priority: {submittedData.priority}
+        </Typography>
+      </Grid>
+      {/* Add additional fields as needed */}
+    </Grid>
+  </div>
+)}
       </Container>
+      </Paper>
     </div>
   );
 };

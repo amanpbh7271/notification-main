@@ -19,10 +19,11 @@ import DesktopNotification from './components/DesktopNotification.jsx'; // Impor
   
 
 function App() {
+ const accountName ="Three Ireland";
   return (
       <div className="App">
         <BrowserRouter>
-        <DesktopNotification /> {/* Include the DesktopNotification component here */}
+        <DesktopNotification accountName={accountName} />
           <Routes>
             <Route path="/" element={<LoginForm />} />
             <Route path="/IncidentForm" element={<IncidentForm />} />

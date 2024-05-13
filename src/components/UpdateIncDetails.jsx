@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,useNavigate } from 'react-router-dom';
+  import { useParams,useNavigate } from 'react-router-dom';
 import { Container, Typography, Grid, TextField, Button, MenuItem, IconButton,Box } from '@mui/material';
 import axios from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
 import Header from './Header';
 import CopyButton from "./CopyCode";
 import QRCode from "qrcode.react";
+import Paper from '@mui/material/Paper';
+import { makeStyles } from '@mui/styles';
+
+const useStyles = makeStyles(() => ({
+  paper: {
+    padding: '16px', // Adjust this value as needed
+    margin: 'auto',
+    marginTop: '32px', // Adjust this value as needed
+    maxWidth: 1000,
+  },
+}));
+
 const UpdateIncDetails = () => {
+  const classes = useStyles();
   const { id } = useParams(); // Get the incident ID from URL params
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -27,6 +40,7 @@ const UpdateIncDetails = () => {
   });
   const [updateForm, SetUpdateForm] = useState(true);
   const [whatsAppAndCopy, SetWhatsAppAndCopy] = useState(false);
+  const [isIncidentEmpty, setIsIncidentEmpty] = useState(false);
   const dataForWhatAppandCopy = ("*Below are Details for raised INC*" + "\n" + "*IncNumber*:- " + formData.incNumber +"\n*Account* :-"+formData.account +
   "\n*Updated/next Status*:-\n" + formData.preUpdates.map(update => `${update.timestamp} -- ${update.message}`).join("\n") +
   "\n*Status*:-" + formData.status +
@@ -36,13 +50,18 @@ const UpdateIncDetails = () => {
   "\n*priority*:-"+formData.priority
 ); 
   useEffect(() => {
-    console.log('is from list',id);
+    console.log('id from list',id);
     const fetchIncidentDetails = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/incDetails/${id}`);
         if (response.status === 200) {
           const incidentData = response.data;
           // Set formData with fetched incident details
+
+          if (incidentData.length === 0) {
+            setIsIncidentEmpty(true);
+          } 
+          else {
           setFormData({
             manager: incidentData?.[0]?.notifications.manager,
             workAround: incidentData?.[0]?.notifications.workAround,
@@ -58,6 +77,7 @@ const UpdateIncDetails = () => {
             date: incidentData?.[0]?.notifications.date,
             time: incidentData?.[0]?.time
           });
+        }
         } else {
           console.error('Failed to fetch incident details');
         }
@@ -120,14 +140,47 @@ const UpdateIncDetails = () => {
    
   };
 
+  const handleCopy = () => {
+    const copiedData = `INC number: ${formData.incNumber}\n` +
+                       `Account: ${formData.account}\n` +
+                       `Status: ${formData.status}\n` +
+                       `Status Update/Next Step: ${formData.nextUpdate}\n` +
+                       `Business Impact: ${formData.businessImpact}\n` +
+                       `Workaround: ${formData.workAround}\n` +
+                       `Notification Manager: ${formData.manager}\n` +
+                       `Issue Owned By: ${formData.issueOwnedBy}\n` +
+                       `Bridge Details: ${formData.bridgeDetails}\n` +
+                       `Date: ${formData.date}\n` +
+                       `Time: ${formData.time}\n` +
+                       `Priority: ${formData.priority}`;
+    navigator.clipboard.writeText(copiedData)
+      .then(() => console.log('Incident details copied to clipboard'))
+      .catch((error) => console.error('Error copying incident details to clipboard:', error));
+  };
+  
+  if (isIncidentEmpty) {
+    return (
+      <Container maxWidth="md" className="incident-container">
+        <Typography variant="h5" gutterBottom>
+          No such incident found.
+        </Typography>
+        <Button variant="contained" color="primary" onClick={handleClose}>
+          Go to Incidents List
+        </Button>
+      </Container>
+    );
+  }
+
   return (
     <div>
+
             <Header />
-    <Container maxWidth="md" className="incident-container" style={{ marginTop: '40px' }}>
+            <Paper elevation={3} className={classes.paper}>
+    <Container maxWidth="md" className="incident-container" >
     
     {updateForm && (<div>
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-  <Typography variant="h5" gutterBottom style={{ width: '95%' }}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" style={{ background: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
+  <Typography variant="h5" gutterBottom  style={{ background: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
     Update Incident Details
   </Typography>
   <IconButton color="inherit" onClick={handleClose} style={{ width: '5%' }}>
@@ -137,7 +190,9 @@ const UpdateIncDetails = () => {
     <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
-          <TextField name="incNumber" label="Inc Number" value={formData.incNumber} onChange={handleChange} fullWidth disabled />
+          <TextField name="incNumber" label="Inc Number" value={formData.incNumber} onChange={handleChange} fullWidth disabled 
+           
+          />
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -226,7 +281,7 @@ const UpdateIncDetails = () => {
           }}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={3}>
           <Button variant="contained" color="primary" type="submit">
             Submit
           </Button>
@@ -250,7 +305,10 @@ const UpdateIncDetails = () => {
           {/* <CopyButton code={data} />         */}
         
         </div> )}
+
+
   </Container>
+  </Paper>
   </div>
   );
 };

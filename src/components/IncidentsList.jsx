@@ -7,6 +7,7 @@ import Header from './Header'; // Import the Header component
 const IncidentsList = () => {
   const [incidents, setIncidents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   useEffect(() => {
     // Fetch incidents data
@@ -33,13 +34,18 @@ const IncidentsList = () => {
   };
 
   // Determine total number of pages
-  const itemsPerPage = 8;
+  const itemsPerPage = 7;
   const totalPages = Math.ceil(incidents.length / itemsPerPage);
 
   // Get incidents for current page
   const indexOfLastIncident = currentPage * itemsPerPage;
   const indexOfFirstIncident = indexOfLastIncident - itemsPerPage;
   const currentIncidents = incidents.slice(indexOfFirstIncident, indexOfLastIncident);
+
+  // Function to handle row hover
+  const handleRowHover = (index) => {
+    setSelectedRow(index);
+  };
 
   return (
     <div>
@@ -52,12 +58,23 @@ const IncidentsList = () => {
                 <TableCell>Incident Number</TableCell>
                 <TableCell>Account</TableCell>
                 <TableCell>Priority</TableCell>
-                <TableCell>Last Update</TableCell>
+                <TableCell>Date</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {currentIncidents.map((incident, index) => (
-                <TableRow key={incident.notifications.incNumber} component={Link} to={`/UpdateIncDetails/${incident.notifications.incNumber}`} style={{ textDecoration: 'none', color: 'inherit', backgroundColor: index % 2 === 0 ? '#f5f5f5' : '#e0e0e0' }}>
+                <TableRow
+                  key={incident.notifications.incNumber}
+                  component={Link}
+                  to={`/UpdateIncDetails/${incident.notifications.incNumber}`}
+                  style={{
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    backgroundColor: index === selectedRow ? '#bbdefb' : index % 2 === 0 ? '#f5f5f5' : '#e0e0e0'
+                  }}
+                  onMouseEnter={() => handleRowHover(index)}
+                  onMouseLeave={() => handleRowHover(null)}
+                >
                   <TableCell>{incident.notifications.incNumber}</TableCell>
                   <TableCell>{incident.notifications.account}</TableCell>
                   <TableCell>{incident.notifications.priority}</TableCell>
