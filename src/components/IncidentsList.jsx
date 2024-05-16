@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Container, Table, TableContainer, TableHead, TableRow, TableCell, TableBody, Paper, Button } from '@mui/material';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import Header from './Header'; // Import the Header component
@@ -8,25 +8,32 @@ const IncidentsList = () => {
   const [incidents, setIncidents] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedRow, setSelectedRow] = useState(null);
+  const isAuthenticated = localStorage.getItem('token');
+  const userDetails = JSON.parse(localStorage.getItem('userDetails')); // Retrieve user details from local storage
+  const [dataFetched, setDataFetched] = useState(false); // Track whether data is fetched
 
   useEffect(() => {
-    // Fetch incidents data
+    // Fetch incidents data only on component mount or when user details change
     const fetchData = async () => {
       try {
-        const unsrnameforAPI = 'Sachin'; // Provide your username here
-        const response = await fetch(`http://localhost:8080/api/incDetailsForManager/${unsrnameforAPI}`);
-        if (response.ok) {
-          let data = await response.json();
-          setIncidents(data);
-        } else {
-          console.error('Failed to fetch incident details:', response.statusText);
+        if (userDetails && !dataFetched) { // Check if userDetails exist and data is not already fetched
+          const username = userDetails.username;
+          const response = await fetch(`http://localhost:8080/api/incDetailsForManager/${username}`);
+          if (response.ok) {
+            let data = await response.json();
+            console.log(data);
+            setIncidents(data);
+            setDataFetched(true); // Set dataFetched to true after fetching data
+          } else {
+            console.error('Failed to fetch incident details:', response.statusText);
+          }
         }
       } catch (error) {
         console.error('Error occurred while fetching incident details:', error);
       }
     };
     fetchData();
-  }, []);
+  }, [userDetails, dataFetched]); // Add dataFetched to the dependency array
 
   // Paginate to a specific page
   const paginate = (pageNumber) => {
@@ -47,6 +54,11 @@ const IncidentsList = () => {
     setSelectedRow(index);
   };
 
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/" />;
+  }
+
   return (
     <div>
       <Header />
@@ -64,9 +76,9 @@ const IncidentsList = () => {
             <TableBody>
               {currentIncidents.map((incident, index) => (
                 <TableRow
-                  key={incident.notifications.incNumber}
+                  key={incident.incNumber}
                   component={Link}
-                  to={`/UpdateIncDetails/${incident.notifications.incNumber}`}
+                  to={`/UpdateIncDetails/${incident.incNumber}`}
                   style={{
                     textDecoration: 'none',
                     color: 'inherit',
@@ -75,10 +87,10 @@ const IncidentsList = () => {
                   onMouseEnter={() => handleRowHover(index)}
                   onMouseLeave={() => handleRowHover(null)}
                 >
-                  <TableCell>{incident.notifications.incNumber}</TableCell>
-                  <TableCell>{incident.notifications.account}</TableCell>
-                  <TableCell>{incident.notifications.priority}</TableCell>
-                  <TableCell>{incident.notifications.date}</TableCell>
+                  <TableCell>{incident.incNumber}</TableCell>
+                  <TableCell>{incident.account}</TableCell>
+                  <TableCell>{incident.priority}</TableCell>
+                  <TableCell>{incident.date}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
